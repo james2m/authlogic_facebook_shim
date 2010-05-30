@@ -57,21 +57,12 @@ module AuthlogicFacebookKoala
       end
       alias_method :facebook_finder=, :facebook_finder
 
-      # What extended permissions should be requested from the user?
-      #
-      # * <tt>Default:</tt> []
-      # * <tt>Accepts:</tt> Array of Strings
-      def facebook_permissions(value=nil)
-        rw_config(:facebook_permissions, value, [])
-      end
-      alias_method :facebook_permissions=, :facebook_permissions
-
       # Should a new user be automatically created if there is no user with
       # given facebook uid?
       #
       # * <tt>Default:</tt> false
       # * <tt>Accepts:</tt> Boolean
-      def facebook_auto_register(value=true)
+      def facebook_auto_register(value=nil)
         rw_config(:facebook_auto_register, value, false)
       end
       alias_method :facebook_auto_register=, :facebook_auto_register
@@ -84,23 +75,24 @@ module AuthlogicFacebookKoala
         end
       end
       
-      def facebook_session?
+      def logged_in_with_facebook?
         @logged_in_with_facebook
       end
 
       protected
       # Override this if you want only some requests to use facebook
       def authenticating_with_facebook?
-        !authenticating_with_unauthorized_record? &&
-          !self.class.facebook_app_id.blank? &&
-          !self.class.facebook_secret_key.blank?
+        if controller.respond_to?(:controller) && controller.controller.respond_to?(:set_facebook_session)
+          controller.set_facebook_session
+          !authenticating_with_unauthorized_record? && controller.facebook_session?
+        end
       end
 
-      # TODO - just for the moment, make these private when we've worked out what to do with facebook_session
-      # private
+      private
       
       def validate_by_facebook
-        facebook_uid = facebook_session['uid']
+        puts "validating with facebook"
+        facebook_uid = facebook_session.uid
         self.attempted_record = klass.send(facebook_finder, facebook_uid)
 
         if self.attempted_record || !facebook_auto_register?
@@ -112,40 +104,17 @@ module AuthlogicFacebookKoala
             self.attempted_record.send(:before_connect, facebook_session)
           end
 
-          return @logged_in_with_facebook = self.attempted_record.save(false)
+          @logged_in_with_facebook = true
+          return self.attempted_record.save(false)
         end
+      end
+
+      def facebook_user
+        controller.facebook_user
       end
 
       def facebook_session
-        return @facebook_session if defined?(@facebook_session)
-        access_token = unverified_facebook_params['access_token']
-        
-        # Make sure these are valid credentials
-        graph = Koala::Facebook::GraphAPI.new(access_token)
-        uid = nil
-        
-        4.times do
-          begin
-            uid = graph.get_object('me')['id']
-            break
-          rescue Errno::ECONNRESET, EOFError, Timeout::Error => e
-            exception = e
-          end
-        end
-
-        raise exception if !uid
-
-        @facebook_session = {'uid' => uid, 'access_token' => access_token}
-      end
-
-      def unverified_facebook_params
-        return @unverified_facebook_params if defined?(@unverified_facebook_params)
-        
-        oauth = Koala::Facebook::OAuth.new(self.class.facebook_app_id, self.class.facebook_secret_key)
-
-        params = oauth.get_user_from_cookie(controller.cookies)
-
-        @unverified_facebook_params = params.is_a?(Hash) ? params : {}
+        controller.facebook_session
       end
 
       def facebook_auto_register?

@@ -20,6 +20,8 @@ Gem::Specification.new do |s|
      "init.rb",
      "lib/authlogic_facebook_koala.rb",
      "lib/authlogic_facebook_koala/acts_as_authentic.rb",
+     "lib/authlogic_facebook_koala/config.rb",
+     "lib/authlogic_facebook_koala/controller.rb",
      "lib/authlogic_facebook_koala/helper.rb",
      "lib/authlogic_facebook_koala/session.rb",
      "rails/init.rb",
