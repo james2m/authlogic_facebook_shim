@@ -12,21 +12,23 @@ Gem::Specification.new do |s|
      "README.rdoc"
   ]
   s.files = [
-     "LICENSE",
-     "README.rdoc",
-     "Rakefile",
-     "VERSION",
-     "authlogic_facebook.gemspec",
+     "authlogic_facebook_koala.gemspec",
      "init.rb",
-     "lib/authlogic_facebook_koala.rb",
      "lib/authlogic_facebook_koala/acts_as_authentic.rb",
      "lib/authlogic_facebook_koala/config.rb",
      "lib/authlogic_facebook_koala/controller.rb",
      "lib/authlogic_facebook_koala/helper.rb",
      "lib/authlogic_facebook_koala/session.rb",
+     "lib/authlogic_facebook_koala.rb",
+     "LICENSE",
      "rails/init.rb",
-     "test/authlogic_facebook_koala_test.rb",
-     "test/test_helper.rb"
+     "Rakefile",
+     "README.rdoc",
+     "test/test_helper.rb",
+     "test/session_test.rb",
+     'test/libs/user.rb',
+     'test/libs/user_session.rb',
+     "VERSION"
   ]
   s.homepage = %q{http://github.com/james2m/authlogic_facebook_koala}
   s.rdoc_options = ["--charset=UTF-8"]
@@ -34,8 +36,10 @@ Gem::Specification.new do |s|
   s.rubygems_version = %q{1.3.5}
   s.summary = %q{Authlogic plugin to support Facebook OAuth2 javascript sessions using koala gem}
   s.test_files = [
+    'test/libs/user.rb',
+    'test/libs/user_session.rb',
     "test/test_helper.rb",
-    "test/authlogic_facebook_koala_test.rb"
+    "test/session_test.rb"
   ]
 
   if s.respond_to? :specification_version then
