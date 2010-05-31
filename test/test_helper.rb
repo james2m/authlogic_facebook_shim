@@ -39,9 +39,10 @@ ActiveRecord::Schema.define(:version => 1) do
 end
 
 require "active_record/fixtures"
+require 'action_controller'
 Rails = true # to trick authlogic into loading the rails adapter
-require File.dirname(__FILE__) + "/../../authlogic/lib/authlogic"
-require File.dirname(__FILE__) + "/../../authlogic/lib/authlogic/test_case"
+require  "authlogic"
+require  "authlogic/test_case"
 require File.dirname(__FILE__) + '/../lib/authlogic_facebook_koala'  unless defined?(AuthlogicFacebookKoala)
 require File.dirname(__FILE__) + '/libs/user'
 require File.dirname(__FILE__) + '/libs/user_session'

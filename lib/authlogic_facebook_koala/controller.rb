@@ -1,4 +1,4 @@
-require 'OStruct'
+require 'ostruct'
 module AuthlogicFacebookKoala
   module Controller
     

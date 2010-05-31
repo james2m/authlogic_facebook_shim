@@ -1,11 +1,9 @@
 require File.dirname(__FILE__) + '/test_helper.rb'
 
 class SessionTest < ActiveSupport::TestCase
-  def test_openid_identifier
+  def test_logged_in_with_facebook
     session = UserSession.new
-    assert session.respond_to?(:openid_identifier)
-    session.openid_identifier = "test"
-    assert_equal "http://test/", session.openid_identifier
+    assert session.respond_to?(:logged_in_with_facebook?)
   end
   
   def test_validate_openid_error
