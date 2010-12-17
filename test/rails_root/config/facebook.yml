@@ -1,0 +1,7 @@
+test:
+  app_id: 237097950235
+  api_key: e91f458404f4e058c61338c4c2ffc64f
+  secret_key: 9384fd8750ebad31aefc6c3e4abafbc9
+  canvas_page_name: facebook_koala
+  callback_url: http://example.com/
+
