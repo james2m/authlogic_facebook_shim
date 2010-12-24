@@ -53,7 +53,7 @@ module AuthlogicFacebookKoala
       # * <tt>Default:</tt> :find_by_#{facebook_uid_field}
       # * <tt>Accepts:</tt> Symbol or String
       def facebook_finder(value=nil)
-        rw_config(:facebook_finder, value, nil)
+        rw_config(:facebook_finder, value, 'find_by_#{facebook_uid_field}')
       end
       alias_method :facebook_finder=, :facebook_finder
 
@@ -126,7 +126,7 @@ module AuthlogicFacebookKoala
       end
 
       def facebook_finder
-        self.class.facebook_finder || "find_by_#{facebook_uid_field}"
+        instance_eval(self.class.facebook_finder)
       end
 
     end
