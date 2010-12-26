@@ -5,6 +5,7 @@ require "#{rails_root}/config/environment.rb"
 
 # Load the testing framework
 require 'test_help'
+require 'flexmock/test_unit'
 require  "authlogic/test_case"
 
 silence_warnings { RAILS_ENV = ENV['RAILS_ENV'] }

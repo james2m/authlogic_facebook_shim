@@ -12,9 +12,10 @@ Rails::Initializer.run do |config|
   # config.active_record.schema_format = :sql
   
   config.gem "authlogic"
+  config.gem 'flexmock'
   config.gem "koala"
-  config.gem "test-unit", :lib => "test/unit"
   config.gem "shoulda"
+  config.gem "test-unit", :lib => "test/unit"
   
   config.frameworks -= [ :active_resource, :action_mailer ]
   config.log_level = :debug
