@@ -132,12 +132,12 @@ class SessionTest < ActiveSupport::TestCase
             should "attempt to call before_connect on the new user" do
               # TODO this is a bit flakey because I can't get flexmock to mock with(@facebook_session)
               @user.should_receive(:before_connect).with(any).and_return(true).once
-              @session.save
+              assert @session.save
             end
           
             should "save the new user" do
               @user.should_receive(:save).with(false).and_return(true).at_least.once
-              @session.save
+              assert @session.save
             end
           
           end
@@ -145,11 +145,17 @@ class SessionTest < ActiveSupport::TestCase
           context "and facebook_auto_register? false" do
 
             should "return false for logged_in_with_facebook?" do
-            
+              @session.should_receive(:facebook_auto_register?).and_return(false).once
+              @session.save
+              
+              assert_equal false, @session.logged_in_with_facebook?
             end
           
             should "not set attempted record" do
-            
+              @session.should_receive(:facebook_auto_register?).and_return(false).once
+              @session.save
+
+              assert_nil @session.attempted_record
             end
           
           end
@@ -157,28 +163,52 @@ class SessionTest < ActiveSupport::TestCase
         end
 
       end
-      
 
       context "when skip_facebook_authentication is true" do
 
         should "not attempt to validate with facebook" do
+          @session.should_receive(:skip_facebook_authentication).and_return(true).once
+          @session.should_receive(:validate_by_facebook).never
           
+          assert_equal false, @session.save
         end
         
         should "return false for logged_in_with_facebook?" do
+          @session.should_receive(:skip_facebook_authentication).and_return(true).once
           
+          assert_equal false, @session.save
+          assert_nil @session.logged_in_with_facebook?
         end
         
+        should "not set attempted record" do
+          @session.should_receive(:skip_facebook_authentication).and_return(true).once
+
+          assert_equal false, @session.save
+          assert_nil @session.attempted_record
+        end
       end
       
       context "when authenticating_with_unauthorized_record? is false" do
 
         should "not attempt to validate with facebook" do
+          @session.should_receive(:authenticating_with_unauthorized_record?).and_return(false).at_least.once
+          @session.should_receive(:validate_by_facebook).never
           
+          assert_equal false, @session.save
         end
 
         should "return false for logged_in_with_facebook?" do
+          @session.should_receive(:authenticating_with_unauthorized_record?).and_return(true).at_least.once
           
+          assert_equal false, @session.save
+          assert_nil @session.logged_in_with_facebook?
+        end
+        
+        should "not set attempted record" do
+          @session.should_receive(:authenticating_with_unauthorized_record?).and_return(true).at_least.once
+
+          assert_equal false, @session.save
+          assert_nil @session.attempted_record
         end
         
       end
