@@ -1,83 +1,190 @@
 require File.expand_path( '../test_helper.rb', File.dirname(__FILE__) )
 
 class SessionTest < ActiveSupport::TestCase
+  
+  setup :activate_authlogic
 
-  context "Config" do
+  context "Session" do
     
     setup do
-      @session_class = Class.new(Authlogic::Session::Base)
+      @mock_cookies = MockCookieJar.new
+      @mock_cookies['fbs_mockappid'] = {:value => 'access_token=mockaccesstoken&expires=0&secret=mocksecret&session_key=mocksessionkey&sig=cbd80b97f124bf392f76e2ee61168990&uid=mockuid'}
+      
+      flexmock(controller).should_receive(:cookies).and_return(@mock_cookies).by_default
+
+      @session = flexmock(UserSession.new)
+      @session.should_receive(:controller).and_return(controller).by_default
     end
 
-    context "facebook_app_id" do
-
-      should "have a default nil" do
-        assert_nil @session_class.facebook_app_id
+    context "setup - for my own sanity" do
+        
+      should "set the controller" do
+        assert_equal controller, @session.controller
       end
       
-      should "have a setter method" do
-        fb_app_id = '234234234'
-        @session_class.facebook_app_id = fb_app_id
-        assert_equal fb_app_id, @session_class.facebook_app_id
+      should "set the cookies" do
+        assert_equal @mock_cookies, @session.controller.cookies
       end
-      
-    end
-
-    context "facebook_secret_key" do
-
-      should "have a default nil" do
-        assert_nil @session_class.facebook_secret_key
-      end
-      
-      should "have a setter method" do
-        fb_secret = '553246736447566b583138525a716e693950736'
-        @session_class.facebook_secret_key = fb_secret
-        assert_equal fb_secret, @session_class.facebook_secret_key
-      end
-      
+            
     end
     
-    context "facebook_api_key" do
+    context "config accessors" do
 
-      should "have a default nil" do
-        assert_nil @session_class.facebook_api_key
+      should "return facebook_app_id" do
+        mockappid = 'mockappid'
+        flexmock(UserSession).should_receive(:facebook_app_id).and_return(mockappid).once
+        assert_equal mockappid, @session.send(:facebook_app_id)
+      end
+
+      should "return facebook_api_key" do
+        mockapikey = 'mockapikey'
+        flexmock(UserSession).should_receive(:facebook_api_key).and_return(mockapikey).once
+        assert_equal mockapikey, @session.send(:facebook_api_key)
+      end
+
+      should "return facebook_secret_key" do
+        mocksecret = 'mocksecret'
+        flexmock(UserSession).should_receive(:facebook_secret_key).and_return(mocksecret).once
+        assert_equal mocksecret, @session.send(:facebook_secret_key)
+      end
+
+      should "return facebook_uid_field" do
+        mockuidfield = 'mockuidfield'
+        flexmock(UserSession).should_receive(:facebook_uid_field).and_return(mockuidfield).once
+        assert_equal mockuidfield, @session.send(:facebook_uid_field)
       end
       
-      should "have a setter method" do
-        fb_api_key = '25a366a46366451636933676978776a45585734'
-        @session_class.facebook_api_key = fb_api_key
-        assert_equal fb_api_key, @session_class.facebook_api_key
+      context "facebook_finder" do
+
+        should "delegate to the class" do
+          mockfinder = 'mockfinder'
+          flexmock(UserSession).should_receive(:facebook_finder).and_return(mockfinder).once
+          assert_equal mockfinder, @session.send(:facebook_finder)
+        end
+
+        should "default if the class returns nil" do
+          flexmock(UserSession).should_receive(:facebook_finder).and_return(nil).once
+          @session.should_receive(:facebook_uid_field).and_return('mockuidfield').once
+          assert_equal "find_by_mockuidfield", @session.send(:facebook_finder)
+        end
+
       end
-      
+
+      should "return facebook_auto_register?" do
+        flexmock(UserSession).should_receive(:facebook_auto_register).and_return(true).once
+        assert @session.send(:facebook_auto_register?)
+      end
+
     end
     
-    context "facebook_uid_field" do
+    context "validating with facebook" do
+      
+      context "with a valid facebook session" do
+        
+        setup do
+          @facebook_session = flexmock('facebook session', :uid => 'mockuid')
+          @session.should_receive(:facebook_session).and_return(@facebook_session).by_default
+        end
 
-      should "have a default of :facebook_uid" do
-        assert_equal :facebook_uid, @session_class.facebook_uid_field
+        context "with an existing facebook uid" do
+        
+          setup do
+            @session.should_receive(:facebook_finder).and_return('finder_method').by_default
+          
+            @user = User.create
+            flexmock(User).should_receive('finder_method').with('mockuid').and_return(@user).by_default
+          
+            @session.save
+          end
+        
+          should "return true for logged_in_with_facebook?" do
+            assert @session.logged_in_with_facebook?
+          end
+        
+          should "set attempted_record" do
+            assert_equal @user, @session.attempted_record
+          end
+        
+        end
+
+        context "without an existing facebook uid" do
+          
+          setup do
+            @session.should_receive(:facebook_finder).and_return('finder_method').by_default
+            flexmock(User).should_receive('finder_method').with('mockuid').and_return(nil).by_default
+            
+            @user = flexmock(User.new)
+            flexmock(User).should_receive(:new).and_return(@user).by_default
+          end
+        
+          context "and facebook_auto_register? true" do
+            
+            setup do
+              @session.should_receive(:facebook_auto_register?).and_return(true).by_default
+            end
+
+            should "build a new user on attempted_record" do
+              flexmock(User).should_receive(:new).and_return(@user).once
+              @session.save
+              assert_equal @user, @session.attempted_record
+            end
+          
+            should "attempt to call before_connect on the new user" do
+              # TODO this is a bit flakey because I can't get flexmock to mock with(@facebook_session)
+              @user.should_receive(:before_connect).with(any).and_return(true).once
+              @session.save
+            end
+          
+            should "save the new user" do
+              @user.should_receive(:save).with(false).and_return(true).at_least.once
+              @session.save
+            end
+          
+          end
+        
+          context "and facebook_auto_register? false" do
+
+            should "return false for logged_in_with_facebook?" do
+            
+            end
+          
+            should "not set attempted record" do
+            
+            end
+          
+          end
+        
+        end
+
       end
       
-      should "have a setter method" do
-        fb_uid_field = 'fb_uid'
-        @session_class.facebook_uid_field = fb_uid_field
-        assert_equal fb_uid_field, @session_class.facebook_uid_field
+
+      context "when skip_facebook_authentication is true" do
+
+        should "not attempt to validate with facebook" do
+          
+        end
+        
+        should "return false for logged_in_with_facebook?" do
+          
+        end
+        
       end
+      
+      context "when authenticating_with_unauthorized_record? is false" do
+
+        should "not attempt to validate with facebook" do
+          
+        end
+
+        should "return false for logged_in_with_facebook?" do
+          
+        end
+        
+      end
+      
       
     end
-    
-    context "facebook_finder" do
-
-      should 'have a default find_by_#{facebook_uid_field}' do
-        assert_equal 'find_by_#{facebook_uid_field}', @session_class.facebook_finder
-      end
-      
-      should "have a setter method" do
-        fb_finder = 'find_by_fb_uid'
-        @session_class.facebook_finder = fb_finder
-        assert_equal fb_finder, @session_class.facebook_finder
-      end
-      
-    end
-    
     
   end
   
