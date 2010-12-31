@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = %q{authlogic_facebook_koala}
-  s.version = "0.0.2"
+  s.version = "0.3.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">=1.2.0") if s.respond_to? :required_rubygems_version=
   s.authors = ["James McCarthy"]
@@ -22,6 +22,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency('authlogic', ">= 2.1.3")
   s.add_runtime_dependency('koala', ">= 0.7.1")
   s.add_development_dependency('rails', '=2.3.5')
+  s.add_development_dependency('flexmock')
   s.add_development_dependency('jeweler')
   s.add_development_dependency('shoulda')
   s.add_development_dependency('sqlite3-ruby')

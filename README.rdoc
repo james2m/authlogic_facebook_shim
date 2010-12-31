@@ -4,11 +4,62 @@ This is a plugin for integrating facebook sessions into authlogic.
 
 This requires a config/facebook.yml file that looks like this:
 
-  development:
-    app_id: xxx123xxx
+    development:
+      app_id: appid
+      api_key: apikey
+      secret_key: secretkey
 
-  production:
-    app_id: xxx123xxx
+    production:
+      app_id: appid
+      api_key: apikey
+      secret_key: secretkey
+    
+If you don't have different facebook credentials for different environments you can set these in UserSession
+
+    facebook_app_id     'appid'
+    facebook_api_key    'apikey'
+    facebook_secret_key 'secretkey'
+  
+In your controller you probably have something like this;
+
+    def current_user_session
+      @current_user_session ||= AccountSession.find
+    end
+
+    def current_user
+      @current_user ||= current_user_session.try(:user)
+    end
+
+    def logged_in?
+      current_user && !current_user_session.stale?
+    end
+
+To get hold of the facebook particulars you will need to add something like this;
+
+    def facebook_user
+      current_user_session.try(:facebook_user)
+    end
+
+    def facebook_user?
+      !facebook_user.nil?
+    end
+
+    def facebook_session?
+      current_user_session.try(:facebook_session?)
+    end
+
+If you have conventional signin and want to ignore facebook for it you will need to do this in your user_sessions_controller;
+
+    def create
+      @account_session = AccountSession.new(params[:account_session])
+      @account_session.skip_facebook_authentication = true
+      if @account_session.save
+        redirect_to member_home_path
+      else
+        render :action => :new
+      end
+    end
+
 
 == Note on Patches/Pull Requests
 
