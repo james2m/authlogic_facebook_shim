@@ -1,4 +1,4 @@
-module AuthlogicFacebookKoala
+module AuthlogicFacebookShim
   module ActsAsAuthentic
     def self.included(klass)
       klass.class_eval do

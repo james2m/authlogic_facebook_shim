@@ -1,6 +1,6 @@
 require File.expand_path( '../../test_helper.rb', File.dirname(__FILE__) )
 
-class AuthlogicFacebookKoala::Session::AdapterTest < ActiveSupport::TestCase
+class AuthlogicFacebookShim::Session::AdapterTest < ActiveSupport::TestCase
   
   setup :activate_authlogic
 

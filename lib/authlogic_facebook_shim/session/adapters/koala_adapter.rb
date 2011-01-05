@@ -1,4 +1,4 @@
-module AuthlogicFacebookKoala
+module AuthlogicFacebookShim
   module Session  
     module Adapter
     

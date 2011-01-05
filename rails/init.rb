@@ -1,1 +1,1 @@
-require 'authlogic_facebook_koala'
+require 'authlogic_facebook_shim'

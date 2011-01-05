@@ -1,4 +1,4 @@
-= authlogic_facebook_koala
+= authlogic_facebook_shim
 
 This is a plugin for integrating facebook sessions into authlogic.
 
