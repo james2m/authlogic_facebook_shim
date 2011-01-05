@@ -1,8 +1,8 @@
-require File.expand_path( '../test_helper.rb', File.dirname(__FILE__) )
+require File.expand_path( '../../test_helper.rb', File.dirname(__FILE__) )
 
-class ConfigTest < ActiveSupport::TestCase
+class AuthlogicFacebookKoala::Session::ConfigTest < ActiveSupport::TestCase
 
-  context "Config" do
+  context "Session::Config" do
     
     setup do
       @session_class = Class.new(Authlogic::Session::Base)

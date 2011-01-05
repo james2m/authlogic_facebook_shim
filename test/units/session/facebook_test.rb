@@ -1,10 +1,10 @@
-require File.expand_path( '../test_helper.rb', File.dirname(__FILE__) )
+require File.expand_path( '../../test_helper.rb', File.dirname(__FILE__) )
 
-class SessionTest < ActiveSupport::TestCase
+class AuthlogicFacebookKoala::Session::FacebookTest < ActiveSupport::TestCase
   
   setup :activate_authlogic
 
-  context "Session" do
+  context "Session::Facebook" do
     
     setup do
       @mock_cookies = MockCookieJar.new
