@@ -19,8 +19,8 @@ Gem::Specification.new do |s|
   s.summary = %q{Authlogic plugin to support Facebook Javascript OAuth2 Sessions.}
   s.test_files = Dir.glob('test/**/*')
 
-  s.add_runtime_dependency('authlogic', ">= 2.1.3")
-  s.add_development_dependency('rails', '~=2.3.5')
+  s.add_runtime_dependency('authlogic', "~>2.1.3")
+  s.add_development_dependency('rails', '~>2.3.5')
   s.add_development_dependency('flexmock')
   s.add_development_dependency('jeweler')
   s.add_development_dependency('shoulda')
