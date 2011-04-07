@@ -48,18 +48,6 @@ To get hold of the facebook particulars you will need to add something like this
       current_user_session.try(:facebook_session?)
     end
 
-If you have conventional signin and want to ignore facebook for it you will need to do this in your user_sessions_controller;
-
-    def create
-      @account_session = AccountSession.new(params[:account_session])
-      @account_session.skip_facebook_authentication = true
-      if @account_session.save
-        redirect_to member_home_path
-      else
-        render :action => :new
-      end
-    end
-
 
 == Note on Patches/Pull Requests
 
