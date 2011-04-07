@@ -1,6 +1,6 @@
 module AuthlogicFacebookShim
   module Session
-    
+       
     def self.included(klass)
       klass.extend Session::Config      
       klass.send(:include, Session::Adapter)
