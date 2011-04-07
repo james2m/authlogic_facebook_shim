@@ -1,8 +1,7 @@
 module AuthlogicFacebookShim
   module Session  
     module Adapter
-      
-      Dir['lib/authlogic_facebook_shim/adapters/*.rb'].each do |adapter|
+      Dir[File.expand_path('../adapters/*.rb', File.dirname(__FILE__))].each do |adapter|
         class_name = File.basename(adapter).rpartition(/_adapter\.rb$/).shift.camelize
         if defined?(class_name)
           require adapter

@@ -1,10 +1,10 @@
 require File.expand_path( '../../test_helper.rb', File.dirname(__FILE__) )
 
-class AuthlogicFacebookShim::Session::AdapterTest < ActiveSupport::TestCase
+class AuthlogicFacebookShim::Adapters::KoalaAdapterTest < ActiveSupport::TestCase
   
   setup :activate_authlogic
 
-  context "Session::Adapter" do
+  context "Adapters::KoalaAdapter" do
     setup do
       @user_info = {
         'session_key' => 'mocksessionkey',
