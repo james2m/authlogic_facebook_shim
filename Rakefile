@@ -1,9 +1,6 @@
 require 'rubygems'
 require 'rake'
-require 'jeweler'
 require 'rake/rdoctask'
-
-Jeweler::Tasks.new
 
 Rake::RDocTask.new do |rdoc|
   version = File.exist?('VERSION') ? File.read('VERSION') : ""
@@ -33,7 +30,5 @@ rescue LoadError
     abort "RCov is not available. In order to run rcov, you must: gem install rcov"
   end
 end
-
-task :test => :check_dependencies
 
 task :default => :test
