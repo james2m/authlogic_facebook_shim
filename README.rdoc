@@ -1,6 +1,8 @@
 = authlogic_facebook_shim
 
-This is a plugin for integrating facebook sessions into authlogic.
+This is a plugin for integrating facebook sessions into authlogic. It relies on using the Javascript SDK to
+login to facebook. Currently the shim support koala (https://github.com/arsduo/koala) for access the graph API
+but if you have a preferred library it is easy to add an adapter.
 
 This requires a config/facebook.yml file that looks like this:
 
@@ -48,6 +50,11 @@ To get hold of the facebook particulars you will need to add something like this
       current_user_session.try(:facebook_session?)
     end
 
+== Adapters
+
+Currently the only adapter in the shim is for koala (https://github.com/arsduo/koala) but if you have a preferred
+wrapper for accessing the graph API please fork the project and add your own adapter (with tests) then send me a pull
+request.
 
 == Note on Patches/Pull Requests
 
