@@ -63,7 +63,7 @@ module AuthlogicFacebookShim
       # * <tt>Default:</tt> :find_by_#{facebook_uid_field}
       # * <tt>Accepts:</tt> Symbol or String
       def facebook_finder(value=nil)
-        rw_config(:facebook_finder, value, nil)
+        rw_config(:facebook_finder, value, false)
       end
       alias_method :facebook_finder=, :facebook_finder
 

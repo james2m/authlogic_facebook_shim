@@ -1,14 +1,11 @@
+require 'authlogic_facebook_shim/version'
 require 'yaml'
 require 'ostruct'
 require 'singleton'
 
-if ActiveRecord::Base.respond_to?(:add_acts_as_authentic_module)
-  require 'authlogic_facebook_shim/acts_as_authentic'
-  require 'authlogic_facebook_shim/session/config'
-  require 'authlogic_facebook_shim/session/adapter'
-  require 'authlogic_facebook_shim/session/facebook'
-  require 'authlogic_facebook_shim/session'
-  
-  Authlogic::Session::Base.send :include, AuthlogicFacebookShim::Session
-  ActiveRecord::Base.send       :include, AuthlogicFacebookShim::ActsAsAuthentic
+module AuthlogicFacebookShim
+  autoload :ActsAsAuthentic,    'authlogic_facebook_shim/acts_as_authentic'
+  autoload :Session,            'authlogic_facebook_shim/session'
 end
+
+require 'authlogic_facebook_shim/railtie' if defined?(Rails) && Rails::VERSION::MAJOR >= 3

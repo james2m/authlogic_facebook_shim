@@ -19,7 +19,7 @@ module AuthlogicFacebookShim
       protected
       # Override this if you want only some requests to use facebook
       def authenticating_with_facebook?
-        !skip_facebook_authentication && !authenticating_with_unauthorized_record? && facebook_session?
+        !skip_facebook_authentication && !authenticating_with_unauthorized_record? && attempted_record.nil? && facebook_session?
       end
 
       private
@@ -38,7 +38,7 @@ module AuthlogicFacebookShim
           end
 
           @logged_in_with_facebook = true
-          return self.attempted_record.save(false)
+          return self.attempted_record.save(:validate => false)
         end
       end
     

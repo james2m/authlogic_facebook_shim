@@ -1,182 +1,192 @@
-require File.expand_path( '../../test_helper.rb', File.dirname(__FILE__) )
+require File.expand_path('../../../test_helper', __FILE__)
+require 'koala'
 
-class AuthlogicFacebookShim::Adapters::KoalaAdapterTest < ActiveSupport::TestCase
+describe AuthlogicFacebookShim::Adapters::KoalaAdapter do
   
-  setup :activate_authlogic
+  before do
+    activate_authlogic
+    
+    @user_info = {
+      'session_key'  => 'mocksessionkey',
+      'expires'      => '0',
+      'uid'          => 'mockuid',
+      'sig'          => 'cbd80b97f124bf392f76e2ee61168990',
+      'secret'       => 'mocksecret',
+      'access_token' => 'mockaccesstoken'
+    }
+    
+    @mock_cookies = MockCookieJar.new
+    @mock_cookies['fbs_mockappid'] = { 
+      :value => 'access_token=mockaccesstoken&expires=0&secret=mocksecret&session_key=mocksessionkey&sig=cbd80b97f124bf392f76e2ee61168990&uid=mockuid'
+    }
+    
+    override controller, :cookies => @mock_cookies
+    
+    @session = UserSession.new
+    override @session, :facebook_app_id     => 'mockappid'
+    override @session, :facebook_api_key    => 'mockapikey'
+    override @session, :facebook_secret_key => 'mocksecret'
+  end
 
-  context "Adapters::KoalaAdapter" do
-    setup do
-      @user_info = {
-        'session_key' => 'mocksessionkey',
-        'expires' => '0',
-        'uid' => 'mockuid',
-        'sig' => 'cbd80b97f124bf392f76e2ee61168990',
-        'secret' => 'mocksecret',
-        'access_token' => 'mockaccesstoken'
-      }
-      @mock_cookies = MockCookieJar.new
-      @mock_cookies['fbs_mockappid'] = {:value => 'access_token=mockaccesstoken&expires=0&secret=mocksecret&session_key=mocksessionkey&sig=cbd80b97f124bf392f76e2ee61168990&uid=mockuid'}
-      @session = flexmock(UserSession.new)
-      @controller = flexmock('Controller')
+  describe "setup - for my own sanity" do
       
-      @session.should_receive(:facebook_app_id).and_return('mockappid').by_default
-      @session.should_receive(:facebook_api_key).and_return('mockapikey').by_default
-      @session.should_receive(:facebook_secret_key).and_return('mocksecret').by_default
-      @session.should_receive(:controller).and_return(@controller).by_default
-      @controller.should_receive(:cookies).and_return(@mock_cookies).by_default
-    end
-
-    context "setup - for my own sanity" do
-        
-      should "set the controller" do
-        assert_equal @controller, @session.controller
-      end
-      
-      should "set the cookies" do
-        assert_equal @mock_cookies, @session.controller.cookies
-      end
-      
-      should "set the facebook_app_id" do
-        assert_equal 'mockappid', @session.facebook_app_id
-      end
-      
-      should "set the facebook_secret_key" do
-        assert_equal 'mocksecret', @session.facebook_secret_key
-      end
-      
-      should "set the facebook_api_key" do
-        assert_equal 'mockapikey', @session.facebook_api_key
-      end
-      
-    end
-
-    context "facebook_session" do
-
-      context "with a valid facebook cookie" do
-        
-        context "and koala support for get_user_info_from_cookie" do
-
-          should "return a session_key" do
-            assert_equal 'mocksessionkey', @session.facebook_session.session_key
-          end
-
-          should "return a uid" do
-            assert_equal 'mockuid', @session.facebook_session.uid
-          end
-
-          should "return a secret" do
-            assert_equal 'mocksecret', @session.facebook_session.secret
-          end
-
-          should "return a sig" do
-            assert_equal 'cbd80b97f124bf392f76e2ee61168990', @session.facebook_session.sig
-          end
-
-          should "return an access_token" do
-            assert_equal 'mockaccesstoken', @session.facebook_session.access_token
-          end
-        
-        end
-
-        context "with previous koala api" do
-          
-          should "get user info with the get_user_from_cookie method" do
-            @oauth = flexmock('oauth')
-            flexmock(Koala::Facebook::OAuth).should_receive(:new).and_return(@oauth).once
-            @oauth.should_receive(:respond_to?).with(:get_user_info_from_cookie).and_return(false).once
-            @oauth.should_receive(:get_user_from_cookie).with(@mock_cookies).and_return(@user_info).once
-
-            assert_equal 'mocksessionkey', @session.facebook_session.session_key
-          end
-        
-        end
-
-      end
-
-      context "with no valid facebook cookie" do
-
-        should "return nil" do
-          @session.should_receive('facebook_app_id').and_return(nil).once
-          assert_nil @session.facebook_session
-        end
-        
-      end
-      
+    it "should set the controller" do
+      @session.send(:controller).must_equal controller
     end
     
-    context "facebook_session?" do
-
-      context "with a valid facebook session" do
-      
-        should "be true" do
-          assert @session.facebook_session?
-        end
-        
-      end
-      
-      context "without a valid facebook session" do
-
-        should "return nil" do
-          @session.should_receive('facebook_app_id').and_return(nil).once
-          assert_equal false, @session.facebook_session?
-        end
-        
-      end
-      
+    it "should set the cookies" do
+      @session.send(:controller).cookies.must_equal @mock_cookies
     end
-
-    context "facebook_user" do
+    
+    it "should set the facebook_app_id" do
+      @session.facebook_app_id.must_equal 'mockappid'
+    end
+    
+    it "should set the facebook_secret_key" do
+      @session.facebook_secret_key.must_equal 'mocksecret' 
+    end
+    
+    it "should set the facebook_api_key" do
+      @session.facebook_api_key.must_equal 'mockapikey' 
+    end
+    
+  end
+  
+  describe "facebook_session" do
+  
+    describe "with a valid facebook cookie" do
       
-      context "with a valid facebook session" do
-        
-        setup do
-          @user = {
-             "id"         => "mockid",
-             "name"       => "Full name",
-             "first_name" => "First name",
-             "last_name"  => "Last name"
-          }
-          
-          @access_token = flexmock('access token')
-          @session.should_receive('facebook_session.access_token').and_return(@access_token).by_default
-          @session.should_receive('facebook_session?').and_return(true).by_default
-           
-          @graph_api = flexmock('graph api', :get_object => @user)
-          flexmock(Koala::Facebook::GraphAPI).should_receive(:new).and_return(@graph_api).by_default
+      describe "and koala support for get_user_info_from_cookie" do
+  
+        it "should return a session_key" do
+          @session.facebook_session.session_key.must_equal 'mocksessionkey'
         end
-
-        should "initialize the graph api" do
-          flexmock(Koala::Facebook::GraphAPI).should_receive(:new).with(@access_token).and_return(@graph_api).once
-          @session.facebook_user
+  
+        it "should return a uid" do
+          @session.facebook_session.uid.must_equal 'mockuid'
         end
-        
-        should "return an OpenStruct" do
-          assert @session.facebook_user.is_a?(OpenStruct)
+  
+        it "should return a secret" do
+          @session.facebook_session.secret.must_equal 'mocksecret'
         end
-        
-        should "return the user details" do
-          assert_equal 'Full name', @session.facebook_user.name
-          assert_equal 'First name', @session.facebook_user.first_name
-          assert_equal 'Last name', @session.facebook_user.last_name
+  
+        it "should return a sig" do
+          @session.facebook_session.sig.must_equal 'cbd80b97f124bf392f76e2ee61168990'
         end
-        
-        should "return the facebook id as uid" do
-          assert_equal 'mockid', @session.facebook_user.uid
+  
+        it "should return an access_token" do
+          @session.facebook_session.access_token.must_equal 'mockaccesstoken'
         end
-        
+      
       end
-
-      context "with no valid facebook session" do
-
-        should "return nil" do
-          @session.should_receive('facebook_session?').and_return(false).once
-          assert_nil @session.facebook_user
-        end
+  
+      describe "with previous koala api" do
         
+        it "should get user info with the get_user_from_cookie method" do
+          @oauth = MiniTest::Mock.new
+          
+          override Koala::Facebook::OAuth, :new => @oauth
+          
+          @oauth.expect :respond_to?, false, [:get_user_info_from_cookie]
+          @oauth.expect :get_user_from_cookie, @user_info, [@mock_cookies]
+        
+          @session.facebook_session.session_key.must_equal 'mocksessionkey'
+        end
+      
+      end
+        
+    end
+  
+    describe "with no valid facebook cookie" do
+  
+      it "should return nil" do
+        def @session.facebook_app_id; nil end
+        
+        @session.facebook_session.must_be_nil 
       end
       
     end
     
   end
   
+  describe "facebook_session?" do
+  
+    describe "with a valid facebook session" do
+    
+      it "should be true" do
+        @session.facebook_session?.must_equal true
+      end
+      
+    end
+    
+    describe "without a valid facebook session" do
+  
+      it "should be false" do
+        override @session, :facebook_app_id => nil
+        @session.facebook_session?.must_equal false
+      end
+      
+    end
+    
+  end
+  
+  describe "facebook_user" do
+    
+    describe "with a valid facebook session" do
+      
+      before do
+        @user = {
+           "id"         => "mockid",
+           "name"       => "Full name",
+           "first_name" => "First name",
+           "last_name"  => "Last name"
+        }
+        
+        override @session, :facebook_session? => true
+         
+        @graph_api = MiniTest::Mock.new
+        @graph_api.expect :get_object, @user, ['me']
+        
+        override Koala::Facebook::GraphAPI, :new => @graph_api
+      end
+  
+      it "should initialize the graph api" do
+        facebook_session = MiniTest::Mock.new
+        access_token     = MiniTest::Mock.new
+        facebook_session.expect :access_token, access_token
+        
+        override @session, :facebook_session => facebook_session
+        
+        expect Koala::Facebook::GraphAPI, :new, :with => [access_token], :return => @graph_api
+        @session.facebook_user
+      end
+      
+      it "should return an OpenStruct" do
+        @session.facebook_user.must_be_instance_of OpenStruct
+      end
+      
+      it "should return the user details" do
+        @session.facebook_user.name.must_equal 'Full name'
+        @session.facebook_user.first_name.must_equal 'First name'
+        @session.facebook_user.last_name.must_equal 'Last name'
+      end
+      
+      it "should return the facebook id as uid" do
+        @session.facebook_user.uid.must_equal 'mockid'
+      end
+      
+    end
+  
+    describe "with no valid facebook session" do
+      
+      it "should return nil" do
+        override @session, :facebook_session? => false
+        
+        @session.facebook_user.must_be_nil
+      end
+      
+    end
+    
+  end
+    
 end
