@@ -21,9 +21,9 @@ Gem::Specification.new do |s|
   s.summary       = %q{Authlogic extension to support Facebook Javascript OAuth2 Sessions.}
   s.test_files    = Dir.glob('test/**/*')
 
-  s.add_runtime_dependency 'authlogic', '~>3.0.1'
+  s.add_runtime_dependency 'authlogic', '~>3.0'
   
-  s.add_development_dependency 'rails',     '~>3.1.0'
+  s.add_development_dependency 'rails',     '~>3.0'
   s.add_development_dependency "minitest",  '~>2'
   s.add_development_dependency "override"
   s.add_development_dependency 'sqlite3'
