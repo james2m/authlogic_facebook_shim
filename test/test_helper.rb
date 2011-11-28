@@ -1,31 +1,31 @@
+# Load the latest minitest
+require 'rubygems'
+gem     'minitest'
+
 # Load the environment
 ENV['RAILS_ENV'] = 'test'
-rails_root = File.dirname(__FILE__) + '/rails_root'
-require "#{rails_root}/config/environment.rb"
+require File.expand_path("../dummy/config/environment.rb",  __FILE__)
 
 # Load the testing framework
-require 'test_help'
-require 'flexmock/test_unit'
-require  "authlogic/test_case"
+require 'minitest/autorun'
+require 'rails/test_help'
+require 'authlogic/test_case'
+require 'override'
 
-silence_warnings { RAILS_ENV = ENV['RAILS_ENV'] }
+if defined?(MiniTest::Unit::TestCase)
+  MiniTest::Unit::TestCase.class_eval do 
+    # Mix Authlogic::TestCase into MiniTest to make activate_authlogic and controller available
+    include Authlogic::TestCase
+    # Mix Override in because it's just stubbing and expectations that feel like MiniTest
+    include Override
+  end
+end
+
+Rails.backtrace_cleaner.remove_silencers!
 
 # Run the migrations
 ActiveRecord::Migration.verbose = false
-ActiveRecord::Migrator.migrate("#{RAILS_ROOT}/db/migrate")
-
-# Setup the fixtures path
-
-class ActiveSupport::TestCase #:nodoc:
-  self.fixture_path = File.join(File.dirname(__FILE__), "fixtures")
-  self.use_transactional_fixtures = false
-  self.use_instantiated_fixtures  = false
-  self.pre_loaded_fixtures = false
-  
-  fixtures :all
-  setup :activate_authlogic
-
-end
+ActiveRecord::Migrator.migrate("#{Rails.root}/db/migrate")
 
 # --- Sample valid cookie hash generated with the code below
 # cookie_hash = {'fbs_233423200151' => 'access_token=233423200151|6892d62675cd952ade8b3f9b-6184456410|xrNaOlTCUF0QFZrJCHmVWzTb5Mk.&expires=0&secret=339a00cdafe6959c3caa1b8004e5f8db&session_key=6892d62675cd952ade8b3f9b-6184456410&sig=19d3c9ccb5b5a55d680ed1cf18698f57&uid=6184456410'}
