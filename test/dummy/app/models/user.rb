@@ -4,4 +4,5 @@ class User < ActiveRecord::Base
   def before_connect(facebook_session)
     true
   end
+  
 end
