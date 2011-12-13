@@ -5,11 +5,6 @@ describe AuthlogicFacebookShim::Session::Facebook do
 
   before do
     activate_authlogic
-
-    @mock_cookies = MockCookieJar.new
-    @mock_cookies['fbs_mockappid'] = {:value => 'access_token=mockaccesstoken&expires=0&secret=mocksecret&session_key=mocksessionkey&sig=cbd80b97f124bf392f76e2ee61168990&uid=mockuid'}
-    
-    override controller, :cookies => @mock_cookies
   end
 
   describe "setup - for my own sanity" do
@@ -23,10 +18,6 @@ describe AuthlogicFacebookShim::Session::Facebook do
       @session.controller.must_equal controller
     end
     
-    it "should set the cookies" do
-      @session.controller.cookies.must_equal @mock_cookies
-    end
-          
   end
   
   describe "config accessors" do
@@ -219,25 +210,25 @@ describe AuthlogicFacebookShim::Session::Facebook do
       end
     end
     
-    describe "when authenticating_with_unauthorized_record? is false" do
+    describe "when authenticating_with_unauthorized_record? is true" do
+      
+      before do
+        override @session, :facebook_session? => true
+        override @session, :authenticating_with_unauthorized_record? => true
+      end
 
       it "should not attempt to validate with facebook" do
-        override @session, :authenticating_with_unauthorized_record? => false
         override @session, :validate_by_facebook => lambda { raise Override::ExpectationError.new('to not be called', 'called') }
         
         @session.save.must_equal false
       end
 
       it "should return false for logged_in_with_facebook?" do
-        override @session, :authenticating_with_unauthorized_record? => true
-        
         @session.save.must_equal false
         @session.logged_in_with_facebook?.must_be_nil
       end
       
       it "should not set attempted record" do
-        override @session, :authenticating_with_unauthorized_record? => true
-
         @session.save.must_equal false
         @session.attempted_record.must_be_nil
       end

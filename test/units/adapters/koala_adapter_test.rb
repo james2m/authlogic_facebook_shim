@@ -8,24 +8,32 @@ describe AuthlogicFacebookShim::Adapters::KoalaAdapter do
     
     @user_info = {
       'session_key'  => 'mocksessionkey',
-      'expires'      => '0',
-      'uid'          => 'mockuid',
       'sig'          => 'cbd80b97f124bf392f76e2ee61168990',
       'secret'       => 'mocksecret',
+      'expires'      => '0',
+      'uid'          => 'mockuid',
       'access_token' => 'mockaccesstoken'
     }
     
-    @mock_cookies = MockCookieJar.new
-    @mock_cookies['fbs_mockappid'] = { 
-      :value => 'access_token=mockaccesstoken&expires=0&secret=mocksecret&session_key=mocksessionkey&sig=cbd80b97f124bf392f76e2ee61168990&uid=mockuid'
+    @signed_user_info = {
+      "algorithm"    => "HMAC-SHA256", 
+      "code"         => "mockcode", 
+      "issued_at"    => 1323717457, 
+      "expires"      => "4880",
+      "user_id"      => "mockuserid", 
+      "access_token" => "mockaccesstoken", 
     }
     
+    @mock_cookies = MockCookieJar.new
     override controller, :cookies => @mock_cookies
     
     @session = UserSession.new
     override @session, :facebook_app_id     => 'mockappid'
     override @session, :facebook_api_key    => 'mockapikey'
     override @session, :facebook_secret_key => 'mocksecret'
+    
+    @oauth = MiniTest::Mock.new
+    override Koala::Facebook::OAuth, :new => @oauth
   end
 
   describe "setup - for my own sanity" do
@@ -54,9 +62,14 @@ describe AuthlogicFacebookShim::Adapters::KoalaAdapter do
   
   describe "facebook_session" do
   
-    describe "with a valid facebook cookie" do
+    describe "with an unsigned facebook cookie" do
       
       describe "and koala support for get_user_info_from_cookie" do
+        
+        before do
+          @oauth.expect :respond_to?, :true, [:get_user_info_from_cookie]
+          @oauth.expect :get_user_info_from_cookie, @user_info, [@mock_cookies]
+        end
   
         it "should return a session_key" do
           @session.facebook_session.session_key.must_equal 'mocksessionkey'
@@ -97,11 +110,39 @@ describe AuthlogicFacebookShim::Adapters::KoalaAdapter do
         
     end
   
+    describe "with an signed facebook cookie" do
+      
+      describe "and koala support for get_user_info_from_cookie" do
+        
+        before do
+          @oauth.expect :respond_to?, :true, [:get_user_info_from_cookie]
+          @oauth.expect :get_user_info_from_cookie, @signed_user_info, [@mock_cookies]
+        end
+  
+        it "should return a code" do
+          @session.facebook_session.code.must_equal 'mockcode'
+        end
+  
+        it "should return a user_id" do
+          @session.facebook_session.user_id.must_equal 'mockuserid'
+        end
+  
+        it "should return an access_token" do
+          @session.facebook_session.access_token.must_equal 'mockaccesstoken'
+        end
+      
+      end
+  
+    end
+  
     describe "with no valid facebook cookie" do
   
+      before do
+        @oauth.expect :respond_to?, :true, [:get_user_info_from_cookie]
+        @oauth.expect :get_user_info_from_cookie, nil, [@mock_cookies]
+      end
+  
       it "should return nil" do
-        def @session.facebook_app_id; nil end
-        
         @session.facebook_session.must_be_nil 
       end
       
@@ -112,6 +153,11 @@ describe AuthlogicFacebookShim::Adapters::KoalaAdapter do
   describe "facebook_session?" do
   
     describe "with a valid facebook session" do
+      
+      before do
+        @oauth.expect :respond_to?, :true, [:get_user_info_from_cookie]
+        override @oauth, :get_user_info_from_cookie => @signed_user_info
+      end
     
       it "should be true" do
         @session.facebook_session?.must_equal true
@@ -120,9 +166,12 @@ describe AuthlogicFacebookShim::Adapters::KoalaAdapter do
     end
     
     describe "without a valid facebook session" do
+      
+      before do
+        override @oauth, :get_user_info_from_cookie => nil
+      end
   
       it "should be false" do
-        override @session, :facebook_app_id => nil
         @session.facebook_session?.must_equal false
       end
       
@@ -135,30 +184,24 @@ describe AuthlogicFacebookShim::Adapters::KoalaAdapter do
     describe "with a valid facebook session" do
       
       before do
+        @graph_api = MiniTest::Mock.new
+        override Koala::Facebook::GraphAPI, :new => @graph_api
+
+        facebook_session = MiniTest::Mock.new
+        access_token     = MiniTest::Mock.new
+        facebook_session.expect :access_token, access_token
+        
+        override @session, :facebook_session => facebook_session
+        override @session, :facebook_session? => true
+
         @user = {
            "id"         => "mockid",
            "name"       => "Full name",
            "first_name" => "First name",
            "last_name"  => "Last name"
         }
-        
-        override @session, :facebook_session? => true
-         
-        @graph_api = MiniTest::Mock.new
+      
         @graph_api.expect :get_object, @user, ['me']
-        
-        override Koala::Facebook::GraphAPI, :new => @graph_api
-      end
-  
-      it "should initialize the graph api" do
-        facebook_session = MiniTest::Mock.new
-        access_token     = MiniTest::Mock.new
-        facebook_session.expect :access_token, access_token
-        
-        override @session, :facebook_session => facebook_session
-        
-        expect Koala::Facebook::GraphAPI, :new, :with => [access_token], :return => @graph_api
-        @session.facebook_user
       end
       
       it "should return an OpenStruct" do
@@ -174,14 +217,16 @@ describe AuthlogicFacebookShim::Adapters::KoalaAdapter do
       it "should return the facebook id as uid" do
         @session.facebook_user.uid.must_equal 'mockid'
       end
-      
+    
     end
   
     describe "with no valid facebook session" do
       
-      it "should return nil" do
+      before do
         override @session, :facebook_session? => false
+      end
         
+      it "should return nil" do
         @session.facebook_user.must_be_nil
       end
       
