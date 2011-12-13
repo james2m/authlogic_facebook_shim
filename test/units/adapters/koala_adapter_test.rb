@@ -185,7 +185,8 @@ describe AuthlogicFacebookShim::Adapters::KoalaAdapter do
       
       before do
         @graph_api = MiniTest::Mock.new
-        override Koala::Facebook::GraphAPI, :new => @graph_api
+        graph_api = Koala::Facebook.const_defined?(:API) ? Koala::Facebook::API : Koala::Facebook::GraphAPI
+        override graph_api, :new => @graph_api
 
         facebook_session = MiniTest::Mock.new
         access_token     = MiniTest::Mock.new

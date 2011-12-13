@@ -27,7 +27,6 @@ module AuthlogicFacebookShim
       def validate_by_facebook
         facebook_uid = facebook_user.uid
         self.attempted_record = klass.send(facebook_finder, facebook_uid)
-
         if self.attempted_record || !facebook_auto_register?
           return @logged_in_with_facebook = !!self.attempted_record
         else
