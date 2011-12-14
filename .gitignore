@@ -23,3 +23,4 @@ authlogic_facebook_shim-*.gem
 test/dummy/tmp
 test/dummy/log
 .rvmrc
+Gemfile.lock
