@@ -148,6 +148,19 @@ describe AuthlogicFacebookShim::Adapters::KoalaAdapter do
       
     end
     
+    describe "with expired facebook cookie" do
+  
+      before do
+        @oauth.expect :respond_to?, :true, [:get_user_info_from_cookie]
+        override @oauth, :get_user_info_from_cookie => lambda { |cookies| raise Koala::Facebook::APIError.new('expired') }
+      end
+  
+      it "should return nil" do
+        @session.facebook_session.must_be_nil 
+      end
+      
+    end
+    
   end
   
   describe "facebook_session?" do

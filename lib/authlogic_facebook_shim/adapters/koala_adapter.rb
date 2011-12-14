@@ -12,7 +12,8 @@ module AuthlogicFacebookShim
               user_info = oauth.get_user_from_cookie(controller.cookies)
             end
             OpenStruct.new( user_info ) if user_info
-            
+          rescue Koala::Facebook::APIError
+            nil
           end
         end
 
